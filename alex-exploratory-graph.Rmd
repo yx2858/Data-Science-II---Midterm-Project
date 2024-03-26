@@ -1,0 +1,56 @@
+---
+title: "DS-Midterm"
+output: html_document
+date: "2024-03-26"
+---
+
+```{r}
+library(tidyverse)
+
+load("/Users/alexmccreight/Columbia/Classes/Spring 2024/Data Science II/recovery.RData")
+```
+
+
+## Exploratory analysis and data visualization
+
+In this section, use appropriate visualization techniques to explore the dataset and identify any patterns or relationships in the data.
+
+```{r}
+# Convert discrete variables to factors
+dat$gender <- as.factor(dat$gender)
+dat$race <- as.factor(dat$race)
+dat$smoking <- as.factor(dat$smoking)
+dat$hypertension <- as.factor(dat$hypertension)
+dat$diabetes <- as.factor(dat$diabetes)
+dat$vaccine <- as.factor(dat$vaccine)
+dat$severity <- as.factor(dat$severity)
+dat$study <- as.factor(dat$study)
+
+# Continuous variables
+continuous_vars <- c("height", "weight", "bmi", "SBP", "LDL")
+
+for (var in continuous_vars) {
+  plot <- ggplot(dat, aes_string(x = var, y = "recovery_time")) +
+    geom_point() +
+    labs(x = var, y = "Time to Recovery (days)", title = paste(var, "vs. Time to Recovery")) +
+    theme_classic()
+  print(plot)
+}
+
+# Discrete variables
+discrete_vars <- c("gender", "race", "smoking", "hypertension", "diabetes", "vaccine", "severity", "study")
+
+for (var in discrete_vars) {
+  plot <- ggplot(dat, aes_string(x = var, y = "recovery_time")) +
+    geom_boxplot() +
+    labs(x = var, y = "Time to Recovery (days)", title = paste(var, "vs. Time to Recovery")) +
+    theme_classic()
+  print(plot)
+}
+```
+
+
+```{r}
+
+```
+
