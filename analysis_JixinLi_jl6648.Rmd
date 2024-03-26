@@ -1,0 +1,154 @@
+---
+title: "jixin"
+output: html_document
+date: "2024-03-26"
+---
+
+```{r}
+library(caret) 
+library(tidymodels)
+library(splines)
+library(mgcv)
+library(pdp)
+library(earth)
+library(tidyverse)
+library(ggplot2)
+library(ISLR)
+library(pls)
+```
+
+```{r}
+load("recovery.RData")
+```
+
+```{r}
+set.seed(1)
+trainIndex <- createDataPartition(dat$recovery_time, p = 0.8, list = FALSE)
+training_data <- dat[trainIndex, ]
+testing_data <- dat[-trainIndex, ]
+
+ctrl <- trainControl(method = "repeatedcv",
+                      number = 10,
+                      repeats = 5,
+                      selectionFunction = "oneSE")
+
+x <- model.matrix(recovery_time ~ ., training_data)[, -1]
+y <- training_data$recovery_time
+```
+
+# Train the LASSO model
+
+```{r}
+lasso_model <- train(
+  x = x,
+  y = y,
+  data = training_data,
+  method = "glmnet",
+  trControl = ctrl,
+  tuneGrid = expand.grid(alpha = 1, 
+                         lambda = exp(seq(-6, -1, length = 100))),
+  standardize = T
+)
+
+ggplot(lasso_model, highlight = TRUE) +
+  theme_classic()
+
+best_lambda_lasso <- lasso_model$bestTune$lambda
+coef(lasso_model$finalModel, lasso_model$bestTune$lambda)
+```
+
+
+# train the ridge
+```{r}
+set.seed(1)
+ridge_model <- train(x = x,
+                    y = y,
+                   data = training_data,
+                   method = "glmnet",
+                   tuneGrid = expand.grid(alpha = 0,
+                                          lambda = exp(seq(-6, -1, length=100))),
+                   trControl = ctrl)
+
+plot(ridge_model, xTrans = log)
+
+
+best_lambda_ridge = ridge_model$bestTune$lambda
+
+# coefficients in the final model
+coef(ridge_model$finalModel, s = ridge_model$bestTune$lambda)
+```
+
+# train the elastic net 
+```{r}
+set.seed(2)
+enet_model <- train(x = x,
+                   y = y,
+                  data = training_data,
+                  method = "glmnet",
+                  tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
+                                         lambda = exp(seq(-6, -1, length = 100))),
+                  trControl = ctrl)
+
+best_lambda_enet = enet_model$bestTune$lambda
+
+myCol <- rainbow(25)
+myPar <- list(superpose.symbol = list(col = myCol),
+              superpose.line = list(col = myCol))
+
+plot(enet_model, par.settings = myPar)
+
+# coefficients in the final model
+coef(enet_model$finalModel, enet_model$bestTune$lambda)
+```
+
+# train the partial least squares
+```{r}
+set.seed(2)
+
+pls_model <- train(x = x,
+                   y = y,
+                   method = "pls",
+                   tuneGrid = data.frame(ncomp = 1:19),
+                   trControl = ctrl,
+                    preProcess = c("center", "scale"))
+
+ggplot(pls_model, highlight = TRUE)
+
+```
+
+# train the MARS 
+```{r}
+mars_grid <- expand.grid(degree = 1:3, 
+                         nprune = 2:15)
+
+set.seed(2)
+
+mars_model <- train(x = x,
+                   y = y,
+                 method = "earth",
+                 tuneGrid = mars_grid,
+                 metric = "RMSE",
+                 trControl = ctrl)
+
+ggplot(mars_model) + theme_classic()
+
+mars_model$bestTune
+coef(mars_model$finalModel)
+```
+
+# train the GAM
+```{r}
+set.seed(2)
+
+gam_model <- train(x = x,
+                 y = y,
+                 method = "gam",
+                 trControl = ctrl)
+
+summary(gam_model)
+```
+
+```{r}
+plot(gam_model$finalModel, pages = 4)
+```
+
