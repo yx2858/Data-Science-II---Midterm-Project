@@ -1,0 +1,94 @@
+---
+title: "analysis_YueyiXu_yx2858"
+author: "Yueyi Xu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(glmnet)
+library(caret)
+library(tidymodels)
+library(pls)
+
+load("recovery.RData")
+```
+
+# Model Training
+
+```{r}
+set.seed(1)
+trainIndex <- createDataPartition(dat$recovery_time, p = 0.8, list = FALSE)
+train_data <- dat[trainIndex, ]
+test_data <- dat[-trainIndex, ]
+
+ctrl <- trainControl(method = "repeatedcv",
+                      number = 10,
+                      repeats = 5,
+                      selectionFunction = "oneSE")
+
+x <- model.matrix(recovery_time ~ ., train_data)[, -1]
+y <- train_data$recovery_time
+```
+
+### LASSO model
+
+```{r}
+lasso.fit <- train(x = x,
+                   y = y,
+                   data = train_data,
+                   method = "glmnet",
+                   tuneGrid = expand.grid(alpha = 1,
+                                         lambda = exp(seq(6, -5, length = 100))),
+                   trControl = ctrl)
+
+plot(lasso.fit, xTrans = log)
+
+lasso.fit$bestTune
+
+coef(lasso.fit$finalModel, lasso.fit$bestTune$lambda)
+```
+
+
+### Ridge model
+
+```{r}
+ridge.fit <- train(x = x,
+                   y = y,
+                   data = train_data,
+                   method = "glmnet",
+                   tuneGrid = expand.grid(alpha = 0,
+                                          lambda = exp(seq(10, -5, length=100))),
+                   trControl = ctrl)
+
+plot(ridge.fit, xTrans = log)
+
+ridge.fit$bestTune
+
+coef(ridge.fit$finalModel, s = ridge.fit$bestTune$lambda)
+```
+
+
+### Elastic net model
+
+```{r}
+enet.fit <- train(x = x,
+                  y = y,
+                  data = train_data,
+                  method = "glmnet",
+                  tuneGrid = expand.grid(alpha = seq(0, 1, length = 21),
+                                         lambda = exp(seq(6, 0, length = 100))),
+                  trControl = ctrl)
+
+enet.fit$bestTune
+
+myCol <- rainbow(25)
+myPar <- list(superpose.symbol = list(col = myCol),
+              superpose.line = list(col = myCol)) 
+plot(enet.fit, par.settings = myPar)
+
+coef(enet.fit$finalModel, enet.fit$bestTune$lambda)
+```
+
+
