@@ -21,6 +21,7 @@ library(pls)
 load("recovery.RData")
 ```
 
+# set data
 ```{r}
 set.seed(1)
 trainIndex <- createDataPartition(dat$recovery_time, p = 0.8, list = FALSE)
