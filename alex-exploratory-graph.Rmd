@@ -4,8 +4,12 @@ output: html_document
 date: "2024-03-26"
 ---
 
-```{r}
+```{r, include = F}
 library(tidyverse)
+library(glmnet)
+library(caret)
+library(tidymodels)
+library(pls)
 
 load("/Users/alexmccreight/Columbia/Classes/Spring 2024/Data Science II/recovery.RData")
 ```
@@ -51,6 +55,35 @@ for (var in discrete_vars) {
 
 
 ```{r}
+set.seed(1)
+trainIndex <- createDataPartition(dat$recovery_time, p = 0.8, list = FALSE)
+train_data <- dat[trainIndex, ]
+test_data <- dat[-trainIndex, ]
 
+ctrl <- trainControl(method = "repeatedcv",
+                      number = 10,
+                      repeats = 5,
+                      selectionFunction = "oneSE")
+
+x <- model.matrix(recovery_time ~ ., train_data)[, -1]
+y <- train_data$recovery_time
+
+# Train the LASSO model
+lasso_model <- train(
+  x = x,
+  y = y,
+  data = train_data,
+  method = "glmnet",
+  trControl = ctrl,
+  tuneGrid = expand.grid(alpha = 1, 
+                         lambda = exp(seq(-6, -1, length = 100))),
+  standardize = T
+)
+
+ggplot(lasso_model, highlight = TRUE) +
+  theme_classic()
+
+best_lambda <- lasso_model$bestTune$lambda
+coef(lasso_model$finalModel, lasso_model$bestTune$lambda)
 ```
 
