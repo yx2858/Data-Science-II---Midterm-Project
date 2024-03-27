@@ -67,7 +67,7 @@ ridge_model <- train(x = x,
                    data = training_data,
                    method = "glmnet",
                    tuneGrid = expand.grid(alpha = 0,
-                                          lambda = exp(seq(-6, -1, length=100))),
+                                          lambda = exp(seq(-6, 10, length=100))),
                    trControl = ctrl)
 
 plot(ridge_model, xTrans = log)
@@ -87,7 +87,7 @@ enet_model <- train(x = x,
                   data = training_data,
                   method = "glmnet",
                   tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
-                                         lambda = exp(seq(-6, -1, length = 100))),
+                                         lambda = exp(seq(-3, 3, length = 100))),
                   trControl = ctrl)
 
 best_lambda_enet = enet_model$bestTune$lambda
