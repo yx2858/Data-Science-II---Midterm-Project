@@ -1,0 +1,73 @@
+---
+title: "temp title"
+author: "Jixin Li (uni), Alex McCreight (apm2217), Yueyi Xu (uni)"
+output: pdf_document
+date: "Spring 2024"
+geometry: margin=1in
+fontsize: 12pt
+spacing: double
+bibliography: Library.bib
+csl: vancouver-superscript.csl
+---
+
+```{r libraries-data-cleaning, include = F}
+library(tidyverse)
+library(glmnet)
+library(caret)
+library(tidymodels)
+library(pls)
+library(corrplot)
+library(knitr)
+
+load("recovery.RData")
+
+dat$gender <- as.factor(dat$gender)
+dat$race <- as.factor(dat$race)
+dat$smoking <- as.factor(dat$smoking)
+dat$hypertension <- as.factor(dat$hypertension)
+dat$diabetes <- as.factor(dat$diabetes)
+dat$vaccine <- as.factor(dat$vaccine)
+dat$severity <- as.factor(dat$severity)
+dat$study <- as.factor(dat$study)
+
+dat <- dat %>%
+  select(-id) %>% 
+  mutate(
+    gender = case_when(
+      dat$gender == 1 ~ "Male",
+      TRUE ~ "Female"),
+    race = case_when(
+      dat$race == 1 ~ "White",
+      dat$race == 2 ~ "Asian",
+      dat$race == 3 ~ "Black",
+      TRUE ~ "Hispanic"),
+    smoking = case_when(
+      dat$smoking == 0 ~ "Never Smoked",
+      dat$smoking == 1 ~ "Former Smoker",
+      TRUE ~ "Current Smoker")) %>% 
+  mutate_if(is.character, as.factor) %>% 
+  mutate(race = relevel(race, ref = "White"),
+         smoking = relevel(smoking, ref = "Never Smoked"),
+         study = relevel(study, ref = "B"))
+```
+
+## Exploratory analysis and data visualization
+
+In this section, use appropriate visualization techniques to explore the dataset and identify any patterns or relationships in the data.
+
+## Model training
+
+In this section, describe the models you used to predict the time to recovery from COVID-19. Briefly state the assumptions made by using the models. Provide a detailed description of the model training procedure and how you obtained the final model.
+
+## Results
+
+In this section, report the final model you built to predict the time to recovery from COVID-19. Interpret the model and assess its performance.
+
+
+## Conclusions
+
+In this section, summarize your findings from the model analysis and discuss the insights gained into predicting time to recovery from COVID-19.
+
+### Additional Considerations
+
+In your modeling efforts, did you include "study" as a predictor variable? Provide a rationale for your decision, considering the variable's relevance and potential impact on model accuracy and interpretability.
