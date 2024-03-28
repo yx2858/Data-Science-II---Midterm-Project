@@ -55,7 +55,7 @@ dat <- dat %>%
 
 The severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) was first identified in China in December 2019. Since then, the COVID-19 pandemic poses a significant public health threat, particularly affecting older adults and individuals with chronic health conditions. Factors such as age, gender, vaccination status, the severity of COVID-19 symptoms, and pre-existing chronic illnesses play a crucial role in determining the recovery time for patients[@Factors].
 
-In this project, we use statistical methods and fit models based on factors that potentially affect COVID-19 recovery time. We begin by examining the data and selecting appropriate variables for modeling. Next, we fit multiple models and assess their test errors. Ultimately, we select the model with the lowest test error to accurately predict COVID-19 recovery time.
+In this project, we use statistical methods and fit models based on factors that potentially affect COVID-19 recovery time. We begin by examining the data and selecting appropriate variables for modeling. Next, we fit and train multiple models and evaluate their test errors to compare their accuracy. Ultimately, we select the model with the lowest test error to accurately predict COVID-19 recovery time.
 
 ## Exploratory analysis and data visualization
 
