@@ -59,11 +59,11 @@ dat <- dat %>%
 
 With the goals of developing a prediction model for COVID-19 recovery time and identifying important risk factors for long recovery in mind, we first ran an exploratory analysis of all variables in our data set to visualize their relationship with recovery time. Our findings revealed that recovery time has a small positive correlation with age and weight, and a slightly stronger positive association with BMI. Conversely, height has a small negative relationship with recovery time.
 
-Among the discrete variables, we observed substantial differences in recovery time based on vaccination status as well as COVID-19 severity. Individuals who received the COVID-19 vaccine had shorter recovery times, on average, compared to those who have not received the vaccine. Additionally, those with "severe" COVID-19 had longer recovery times, on average, compared to those with "non-severe" COVID-19.
+Among the discrete variables, we observed substantial differences in recovery time based on vaccination status as well as COVID-19 severity. Individuals who received the COVID-19 vaccine had shorter recovery times, on average, compared to those who have not received the vaccine (Figure 2). Additionally, those with "severe" COVID-19 had longer recovery times, on average, compared to those with "non-severe" COVID-19 (Figure 3).
 
 Interestingly, we found a saw that those with diabetes had a shorter time to recovery compared to those without diabetes, which immediately seems counter intuitive (Figure 1). However, upon further literature review, we posit that those with diabetes in these studies either died more quickly compared to those without diabetes, or those with long-COVID and lived most likely had well-managed diabetes and took extra precautions against COVID-19 compared to those without diabetes[@diabetes].
 
-Finally, we observed a significant difference in the variability of recovery times of participants in study A versus study B. The exact reasons for this discrepency are unclear, however, we hypothesize that study A was conducted when the vaccines were more available leading to reduced variability in recovery time compared to study B. 
+Finally, we observed a significant difference in the variability of recovery times of participants in study A versus study B. The exact reasons for this discrepancy are unclear, however, we hypothesize that study A was conducted when the vaccines were more available leading to reduced variability in recovery time compared to study B. 
 
 ```{r, echo = F}
 dat %>%
@@ -75,6 +75,30 @@ dat %>%
     geom_boxplot() +
     theme_classic() + 
     labs(x = "Diabetes Status", y = "Recovery Time (in days)", title = "Figure 1: Diabetes Status vs Time to Recovery")
+```
+
+```{r, echo=FALSE}
+dat %>%
+  mutate(vaccine = case_when(
+    dat$vaccine == 1 ~ "Vaccinated",
+    TRUE ~ "Not vaccinated"
+  )) %>% 
+  ggplot(aes(x = vaccine, y = recovery_time)) +
+    geom_boxplot() +
+    theme_classic() + 
+    labs(x = "Vaccination status at the time of infection", y = "Recovery Time (in days)", title = "Figure 2: Vaccination status vs Time to Recovery")
+```
+
+```{r, echo=FALSE}
+dat %>%
+  mutate(severity = case_when(
+    dat$severity == 1 ~ "Severe",
+    TRUE ~ "Not severe"
+  )) %>% 
+  ggplot(aes(x = severity, y = recovery_time)) +
+    geom_boxplot() +
+    theme_classic() + 
+    labs(x = "Severity of COVID-19 infection", y = "Recovery Time (in days)", title = "Figure 3: severity vs Time to Recovery")
 ```
 
 

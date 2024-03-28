@@ -52,7 +52,7 @@ dat <- dat %>%
          study = relevel(study, ref = "B"))
 
 # Continuous variables
-continuous_vars <- c("height", "weight", "bmi", "SBP", "LDL")
+continuous_vars <- c("age","height", "weight", "bmi", "SBP", "LDL")
 
 for (var in continuous_vars) {
   plot <- ggplot(dat, aes_string(x = var, y = "recovery_time")) +
