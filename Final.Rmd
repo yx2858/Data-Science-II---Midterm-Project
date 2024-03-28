@@ -18,6 +18,8 @@ library(tidymodels)
 library(pls)
 library(corrplot)
 library(knitr)
+library(patchwork)
+
 
 load("recovery.RData")
 
@@ -61,9 +63,36 @@ In this project, we use statistical methods and fit models based on factors that
 
 With the goals of developing a prediction model for COVID-19 recovery time and identifying important risk factors for long recovery in mind, we first ran an exploratory analysis of all variables in our data set to visualize their relationship with recovery time. Our findings revealed that recovery time has a small positive correlation with age and weight, and a slightly stronger positive association with BMI. Conversely, height has a small negative relationship with recovery time.
 
-Among the discrete variables, we observed substantial differences in recovery time based on vaccination status as well as COVID-19 severity. Individuals who received the COVID-19 vaccine had shorter recovery times, on average, compared to those who have not received the vaccine (Figure 2). Additionally, those with "severe" COVID-19 had longer recovery times, on average, compared to those with "non-severe" COVID-19 (Figure 3).
+Among the discrete variables, we observed substantial differences in recovery time based on vaccination status as well as COVID-19 severity. Individuals who received the COVID-19 vaccine had shorter recovery times, on average, compared to those who have not received the vaccine (Figure 1a). Additionally, those with "severe" COVID-19 had longer recovery times, on average, compared to those with "non-severe" COVID-19 (Figure 1b).
 
-Interestingly, we found a saw that those with diabetes had a shorter time to recovery compared to those without diabetes, which immediately seems counter intuitive (Figure 1). However, upon further literature review, we posit that those with diabetes in these studies either died more quickly compared to those without diabetes, or those with long-COVID and lived most likely had well-managed diabetes and took extra precautions against COVID-19 compared to those without diabetes[@diabetes].
+```{r, echo=FALSE}
+p1 <- dat %>%
+  mutate(vaccine = case_when(
+    dat$vaccine == 1 ~ "Vaccinated",
+    TRUE ~ "Not vaccinated"
+  )) %>% 
+  ggplot(aes(x = vaccine, y = recovery_time)) +
+    geom_boxplot() +
+    theme_classic() + 
+    labs(x = "Vaccination Status at Time of Infection", y = "Recovery Time (in days)", title = "Figure 1a")
+
+p2 <- dat %>%
+  mutate(severity = case_when(
+    dat$severity == 1 ~ "Severe",
+    TRUE ~ "Not severe"
+  )) %>% 
+  ggplot(aes(x = severity, y = recovery_time)) +
+    geom_boxplot() +
+    theme_classic() + 
+    labs(x = "Severity of COVID-19 infection", y = "Recovery Time (in days)", title = "Figure 1b")
+
+p1 + p2
+```
+
+
+
+
+Interestingly, we found a saw that those with diabetes had a shorter time to recovery compared to those without diabetes, which immediately seems counter intuitive (Figure 2). However, upon further literature review, we posit that those with diabetes in these studies either died more quickly compared to those without diabetes, or those with long-COVID and lived most likely had well-managed diabetes and took extra precautions against COVID-19 compared to those without diabetes[@diabetes].
 
 Finally, we observed a significant difference in the variability of recovery times of participants in study A versus study B. The exact reasons for this discrepancy are unclear, however, we hypothesize that study A was conducted when the vaccines were more available leading to reduced variability in recovery time compared to study B. 
 
@@ -76,33 +105,8 @@ dat %>%
   ggplot(aes(x = diabetes, y = recovery_time)) +
     geom_boxplot() +
     theme_classic() + 
-    labs(x = "Diabetes Status", y = "Recovery Time (in days)", title = "Figure 1: Diabetes Status vs Time to Recovery")
+    labs(x = "Diabetes Status", y = "Recovery Time (in days)", title = "Figure 2: Diabetes Status vs Time to Recovery")
 ```
-
-```{r, echo=FALSE}
-dat %>%
-  mutate(vaccine = case_when(
-    dat$vaccine == 1 ~ "Vaccinated",
-    TRUE ~ "Not vaccinated"
-  )) %>% 
-  ggplot(aes(x = vaccine, y = recovery_time)) +
-    geom_boxplot() +
-    theme_classic() + 
-    labs(x = "Vaccination status at the time of infection", y = "Recovery Time (in days)", title = "Figure 2: Vaccination status vs Time to Recovery")
-```
-
-```{r, echo=FALSE}
-dat %>%
-  mutate(severity = case_when(
-    dat$severity == 1 ~ "Severe",
-    TRUE ~ "Not severe"
-  )) %>% 
-  ggplot(aes(x = severity, y = recovery_time)) +
-    geom_boxplot() +
-    theme_classic() + 
-    labs(x = "Severity of COVID-19 infection", y = "Recovery Time (in days)", title = "Figure 3: severity vs Time to Recovery")
-```
-
 
   
 ## Model training
@@ -123,4 +127,3 @@ In this section, summarize your findings from the model analysis and discuss the
 In your modeling efforts, did you include "study" as a predictor variable? Provide a rationale for your decision, considering the variable's relevance and potential impact on model accuracy and interpretability.
 
 ## References
-\[@Factors\]: Al-Thaqafy MS, Batahaf R, Bahakeem R, Batarjee R, Mubaraki W, Alsaedi A, Alghamdi LA, Al Nufaiei ZF. Factors Affecting Confirmed COVID-19 Patient's Recovery Time at King Abdulaziz Medical City, Jeddah. Cureus. 2023 Jan 24;15(1):e34130. doi: 10.7759/cureus.34130.
