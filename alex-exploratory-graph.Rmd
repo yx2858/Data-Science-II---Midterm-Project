@@ -83,7 +83,10 @@ corrplot(cor(dat_continuous), method = 'number', type = 'lower')
 # Variables to include in subset: age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study
 
 dat_subset <- dat %>% 
-  select(c(age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study, recovery_time))
+  select(c(age, bmi, gender, race, smoking, hypertension, diabetes, vaccine, severity, study, recovery_time))
+
+dat %>% ggplot(aes(x = age, y = recovery_time)) +
+  geom_jitter() + geom_smooth() + theme_classic()
 ```
 
 

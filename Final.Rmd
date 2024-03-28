@@ -1,6 +1,6 @@
 ---
 title: "temp title"
-author: "Jixin Li (uni), Alex McCreight (apm2217), Yueyi Xu (uni)"
+author: "Jixin Li (jl6648), Alex McCreight (apm2217), Yueyi Xu (yx2858)"
 output: pdf_document
 date: "Spring 2024"
 geometry: margin=1in
@@ -51,10 +51,34 @@ dat <- dat %>%
          study = relevel(study, ref = "B"))
 ```
 
+## Introduction
+
+
+
 ## Exploratory analysis and data visualization
 
-In this section, use appropriate visualization techniques to explore the dataset and identify any patterns or relationships in the data.
+With the goals of developing a prediction model for COVID-19 recovery time and identifying important risk factors for long recovery in mind, we first ran an exploratory analysis of all variables in our data set to visualize their relationship with recovery time. Our findings revealed that recovery time has a small positive correlation with age and weight, and a slightly stronger positive association with BMI. Conversely, height has a small negative relationship with recovery time.
 
+Among the discrete variables, we observed substantial differences in recovery time based on vaccination status as well as COVID-19 severity. Individuals who received the COVID-19 vaccine had shorter recovery times, on average, compared to those who have not received the vaccine. Additionally, those with "severe" COVID-19 had longer recovery times, on average, compared to those with "non-severe" COVID-19.
+
+Interestingly, we found a saw that those with diabetes had a shorter time to recovery compared to those without diabetes, which immediately seems counter intuitive (Figure 1). However, upon further literature review, we posit that those with diabetes in these studies either died more quickly compared to those without diabetes, or those with long-COVID and lived most likely had well-managed diabetes and took extra precautions against COVID-19 compared to those without diabetes[@diabetes].
+
+Finally, we observed a significant difference in the variability of recovery times of participants in study A versus study B. The exact reasons for this discrepency are unclear, however, we hypothesize that study A was conducted when the vaccines were more available leading to reduced variability in recovery time compared to study B. 
+
+```{r, echo = F}
+dat %>%
+  mutate(diabetes = case_when(
+    dat$diabetes == 1 ~ "Has Diabetes",
+    TRUE ~ "No Diabetes"
+  )) %>% 
+  ggplot(aes(x = diabetes, y = recovery_time)) +
+    geom_boxplot() +
+    theme_classic() + 
+    labs(x = "Diabetes Status", y = "Recovery Time (in days)", title = "Figure 1: Diabetes Status vs Time to Recovery")
+```
+
+
+  
 ## Model training
 
 In this section, describe the models you used to predict the time to recovery from COVID-19. Briefly state the assumptions made by using the models. Provide a detailed description of the model training procedure and how you obtained the final model.
@@ -71,3 +95,5 @@ In this section, summarize your findings from the model analysis and discuss the
 ### Additional Considerations
 
 In your modeling efforts, did you include "study" as a predictor variable? Provide a rationale for your decision, considering the variable's relevance and potential impact on model accuracy and interpretability.
+
+## References
