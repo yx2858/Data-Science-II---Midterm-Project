@@ -21,6 +21,71 @@ library(pls)
 load("recovery.RData")
 ```
 
+```{r}
+dat$gender <- as.factor(dat$gender)
+dat$race <- as.factor(dat$race)
+dat$smoking <- as.factor(dat$smoking)
+dat$hypertension <- as.factor(dat$hypertension)
+dat$diabetes <- as.factor(dat$diabetes)
+dat$vaccine <- as.factor(dat$vaccine)
+dat$severity <- as.factor(dat$severity)
+dat$study <- as.factor(dat$study)
+
+dat <- dat %>%
+  select(-id) %>% 
+  mutate(
+    gender = case_when(
+      dat$gender == 1 ~ "Male",
+      TRUE ~ "Female"),
+    race = case_when(
+      dat$race == 1 ~ "White",
+      dat$race == 2 ~ "Asian",
+      dat$race == 3 ~ "Black",
+      TRUE ~ "Hispanic"),
+    smoking = case_when(
+      dat$smoking == 0 ~ "Never Smoked",
+      dat$smoking == 1 ~ "Former Smoker",
+      TRUE ~ "Current Smoker")) %>% 
+  mutate_if(is.character, as.factor) %>% 
+  mutate(race = relevel(race, ref = "White"),
+         smoking = relevel(smoking, ref = "Never Smoked"),
+         study = relevel(study, ref = "B"))
+
+# Continuous variables
+continuous_vars <- c("height", "weight", "bmi", "SBP", "LDL")
+
+for (var in continuous_vars) {
+  plot <- ggplot(dat, aes_string(x = var, y = "recovery_time")) +
+    geom_point() +
+    labs(x = var, y = "Time to Recovery (days)", title = paste(var, "vs. Time to Recovery")) +
+    theme_classic()
+  print(plot)
+}
+
+# Discrete variables
+discrete_vars <- c("gender", "race", "smoking", "hypertension", "diabetes", "vaccine", "severity", "study")
+
+for (var in discrete_vars) {
+  plot <- ggplot(dat, aes_string(x = var, y = "recovery_time")) +
+    geom_boxplot() +
+    labs(x = var, y = "Time to Recovery (days)", title = paste(var, "vs. Time to Recovery")) +
+    theme_classic()
+  print(plot)
+}
+
+dat_continuous <- dat %>% 
+  select(c(age, height, weight, bmi, SBP, LDL))
+
+corrplot(cor(dat_continuous), method = 'number', type = 'lower') 
+
+# Variables to include in subset: age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study
+
+dat_subset <- dat %>% 
+  select(c(age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, LDL, severity, study, recovery_time))
+```
+
+
+
 # set data
 ```{r}
 set.seed(1)
@@ -28,13 +93,27 @@ trainIndex <- createDataPartition(dat$recovery_time, p = 0.8, list = FALSE)
 training_data <- dat[trainIndex, ]
 testing_data <- dat[-trainIndex, ]
 
-ctrl <- trainControl(method = "repeatedcv",
+set.seed(1)
+trainIndex_sub <- createDataPartition(dat_subset$recovery_time, p = 0.8, list = FALSE)
+training_data_sub <- dat_subset[trainIndex, ]
+testing_data_sub <- dat_subset[-trainIndex, ]
+
+
+ctrl_SE <- trainControl(method = "repeatedcv",
                       number = 10,
                       repeats = 5,
                       selectionFunction = "oneSE")
 
+ctrl_best <- trainControl(method = "repeatedcv",
+                      number = 10,
+                      repeats = 5,
+                      selectionFunction = "best")
+
 x <- model.matrix(recovery_time ~ ., training_data)[, -1]
 y <- training_data$recovery_time
+
+x_sub <- model.matrix(recovery_time ~ ., training_data_sub)[, -1]
+y_sub <- training_data_sub$recovery_time
 ```
 
 # Train the LASSO model
@@ -45,19 +124,34 @@ lasso_model <- train(
   y = y,
   data = training_data,
   method = "glmnet",
-  trControl = ctrl,
+  trControl = ctrl_SE,
   tuneGrid = expand.grid(alpha = 1, 
                          lambda = exp(seq(-6, -1, length = 100))),
   standardize = T
 )
 
-ggplot(lasso_model, highlight = TRUE) +
-  theme_classic()
+plot(lasso_model, xTrans = log)
 
-best_lambda_lasso <- lasso_model$bestTune$lambda
+best_lambda <- lasso_model$bestTune$lambda
 coef(lasso_model$finalModel, lasso_model$bestTune$lambda)
-```
 
+# LASSO model Subset
+lasso_fit_sub <- train(
+  x = x_sub,
+  y = y_sub,
+  data = training_data_sub,
+  method = "glmnet",
+  trControl = ctrl_SE,
+  tuneGrid = expand.grid(alpha = 1, 
+                         lambda = exp(seq(-6, 2, length = 100))),
+  standardize = T
+)
+
+plot(lasso_fit_sub , xTrans = log)
+
+best_lambda <- lasso_fit_sub$bestTune$lambda
+coef(lasso_fit_sub$finalModel, lasso_fit_sub$bestTune$lambda)
+```
 
 # train the ridge
 ```{r}
@@ -68,7 +162,7 @@ ridge_model <- train(x = x,
                    method = "glmnet",
                    tuneGrid = expand.grid(alpha = 0,
                                           lambda = exp(seq(-6, 10, length=100))),
-                   trControl = ctrl)
+                   trControl = ctrl_best)
 
 plot(ridge_model, xTrans = log)
 
@@ -77,20 +171,37 @@ best_lambda_ridge = ridge_model$bestTune$lambda
 
 # coefficients in the final model
 coef(ridge_model$finalModel, s = ridge_model$bestTune$lambda)
+
+
+# Ridge Subset
+ridge_fit_sub <- train(x = x_sub,
+                   y = y_sub,
+                   data = training_data_sub,
+                   method = "glmnet",
+                   tuneGrid = expand.grid(alpha = 0,
+                                          lambda = exp(seq(-6, 10, length=100))),
+                   trControl = ctrl_best)
+
+plot(ridge_fit_sub, xTrans = log)
+
+ridge_fit_sub$bestTune
+
+coef(ridge_fit_sub$finalModel, s = ridge_fit_sub$bestTune$lambda)
 ```
 
 # train the elastic net 
 ```{r}
-set.seed(2)
+set.seed(1)
 enet_model <- train(x = x,
                    y = y,
                   data = training_data,
                   method = "glmnet",
                   tuneGrid = expand.grid(alpha = seq(0, 1, length = 21), 
-                                         lambda = exp(seq(-3, 3, length = 100))),
-                  trControl = ctrl)
+                                         lambda = exp(seq(-5, 5, length = 100))),
+                  trControl = ctrl_best,
+                  standardize = T)
 
-best_lambda_enet = enet_model$bestTune$lambda
+ enet_model$bestTune
 
 myCol <- rainbow(25)
 myPar <- list(superpose.symbol = list(col = myCol),
@@ -100,20 +211,49 @@ plot(enet_model, par.settings = myPar)
 
 # coefficients in the final model
 coef(enet_model$finalModel, enet_model$bestTune$lambda)
+
+# Elastic Net Subset
+enet_fit_sub <- train(x = x_sub,
+                  y = y_sub,
+                  data = training_data_sub,
+                  method = "glmnet",
+                  tuneGrid = expand.grid(alpha = seq(0, 1, length = 21),
+                                         lambda = exp(seq(-5, 5, length = 100))),
+                  trControl = ctrl_best,
+                  standardize = T)
+
+enet_fit_sub$bestTune
+
+myCol <- rainbow(25)
+myPar <- list(superpose.symbol = list(col = myCol),
+              superpose.line = list(col = myCol)) 
+plot(enet_fit_sub, par.settings = myPar)
+
+coef(enet_fit_sub$finalModel, enet_fit_sub$bestTune$lambda)
 ```
 
 # train the partial least squares
 ```{r}
-set.seed(2)
+set.seed(1)
 
 pls_model <- train(x = x,
                    y = y,
                    method = "pls",
-                   tuneGrid = data.frame(ncomp = 1:19),
-                   trControl = ctrl,
+                   tuneGrid = data.frame(ncomp = 1:15),
+                   trControl = ctrl_best,
                     preProcess = c("center", "scale"))
 
-ggplot(pls_model, highlight = TRUE)
+ggplot(pls_model, highlight = TRUE) + theme_classic()
+
+# Partial Least Squares
+pls_fit_sub <- train(x = x_sub,
+                   y = y_sub,
+                   method = "pls",
+                   tuneGrid = data.frame(ncomp = 1:12),
+                   trControl = ctrl_best,
+                   preProcess = c("center", "scale"))
+
+ggplot(pls_fit_sub, highlight = TRUE) + theme_classic()
 
 ```
 
@@ -122,34 +262,72 @@ ggplot(pls_model, highlight = TRUE)
 mars_grid <- expand.grid(degree = 1:3, 
                          nprune = 2:15)
 
-set.seed(2)
-
 mars_model <- train(x = x,
                    y = y,
                  method = "earth",
                  tuneGrid = mars_grid,
                  metric = "RMSE",
-                 trControl = ctrl)
+                 trControl = ctrl_best)
 
 ggplot(mars_model) + theme_classic()
 
 mars_model$bestTune
 coef(mars_model$finalModel)
+
+# MARS Sub
+
+mars_fit_sub <- train(x = x_sub,
+                  y = y_sub,
+                 method = "earth",
+                 tuneGrid = mars_grid,
+                 metric = "RMSE",
+                 trControl = ctrl_best)
+
+ggplot(mars_fit_sub) + theme_classic()
+
+mars_fit_sub$bestTune
+coef(mars_fit_sub$finalModel)
 ```
 
-# train the GAM
+
 ```{r}
-set.seed(2)
-
-gam_model <- train(x = x,
-                 y = y,
-                 method = "gam",
-                 trControl = ctrl)
-
-summary(gam_model)
+resamples <- resamples(list(lasso = lasso_model, 
+                            enet = enet_model,
+                            ridge = ridge_model,
+                            pls = pls_model,
+                            mars = mars_model,
+                            lasso_sub = lasso_fit_sub, 
+                            enet_sub = enet_fit_sub,
+                            ridge_sub = ridge_fit_sub,
+                            pls_sub = pls_fit_sub,
+                            mars_sub = mars_fit_sub))
+bwplot(resamples, metric = "RMSE")
 ```
 
 ```{r}
-plot(gam_model$finalModel, pages = 4)
+# Prepare the test data for predictions
+x_test <- model.matrix(recovery_time ~ ., testing_data)[, -1]
+x_test_sub <- model.matrix(recovery_time ~ ., testing_data_sub)[, -1]
+
+
+# Create a tibble to store the model names and test RMSE values
+test_RMSE <- tibble(
+  Model = c("LASSO", "Elastic Net", "Ridge", "PLS", "MARS",
+            "LASSO (Subset)", "Elastic Net (Subset)", "Ridge (Subset)", "PLS (Subset)", "MARS (Subset)"),
+  RMSE = c(
+    postResample(predict(lasso_model, newdata = x_test), testing_data$recovery_time)[1],
+    postResample(predict(enet_model, newdata = x_test), testing_data$recovery_time)[1],
+    postResample(predict(ridge_model, newdata = x_test), testing_data$recovery_time)[1],
+    postResample(predict(pls_model, newdata = x_test), testing_data$recovery_time)[1],
+    postResample(predict(mars_model, newdata = x_test), testing_data$recovery_time)[1],
+    postResample(predict(lasso_fit_sub, newdata = x_test_sub), testing_data_sub$recovery_time)[1],
+    postResample(predict(enet_fit_sub, newdata = x_test_sub), testing_data_sub$recovery_time)[1],
+    postResample(predict(ridge_fit_sub, newdata = x_test_sub), testing_data_sub$recovery_time)[1],
+    postResample(predict(pls_fit_sub, newdata = x_test_sub), testing_data_sub$recovery_time)[1],
+    postResample(predict(mars_fit_sub, newdata = x_test_sub), testing_data_sub$recovery_time)[1]
+  )
+)
+
+test_RMSE %>% arrange(RMSE)
 ```
 
