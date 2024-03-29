@@ -111,17 +111,19 @@ dat %>%
   
 ## Model training
 
-In the pursuit of predicting the time to recovery from COVID-19, a series of statistical and machine learning models were deployed, each with unique characteristics and assumptions. Here's a detailed description of each model used in this context:
+In the pursuit of predicting the time to recovery from COVID-19, a series of statistical and machine learning models were deployed, each with unique characteristics and assumptions.
 
-LASSO Regression: This model applies L1 regularization to reduce the risk of overfitting by penalizing large coefficients. It's particularly useful for models with a high number of predictors, as it can help in feature selection by shrinking some coefficients to zero.
+Assumptions
+Linearity: Except for MARS, the models assume a linear relationship between the predictors and the response variable.
 
-Ridge Regression: Similar to LASSO, Ridge applies L2 regularization. It's used to prevent overfitting by penalizing large coefficients, but unlike LASSO, it does not set them to zero.
+Independence: Observations are assumed to be independent of each other.
 
-Elastic Net: This combines the properties of both LASSO and Ridge regression, using both L1 and L2 regularization. It's useful when there are correlations among predictors.
 
-Partial Least Squares (PLS): PLS is a method that projects both the predictors and the responses to a new space formed by orthogonal components that maximize the covariance between the response and the predictors.
+Homoscedasticity: Constant variance of error terms for Ridge, LASSO, and Elastic Net.
 
-Multivariate Adaptive Regression Splines (MARS): MARS is a non-linear regression technique that can model complex interactions between variables. It's flexible and can capture non-linear relationships without prior specification.
+No multicollinearity: Particularly relevant for linear models like Ridge and LASSO, although Elastic Net and PLS can handle multicollinearity to some extent.
+
+Normal Distribution of Errors: For linear models, it's often assumed that the error terms are normally distributed.
 
 Model Training Procedure:
 1. Data Partitioning: The dataset 'dat' and a subset 'dat_subset' are divided into training (80%) and testing (20%) sets to ensure models are evaluated on unseen data.
