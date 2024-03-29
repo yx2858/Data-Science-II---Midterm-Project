@@ -111,11 +111,35 @@ dat %>%
   
 ## Model training
 
-In this section, describe the models you used to predict the time to recovery from COVID-19. Briefly state the assumptions made by using the models. Provide a detailed description of the model training procedure and how you obtained the final model.
+In the pursuit of predicting the time to recovery from COVID-19, a series of statistical and machine learning models were deployed, each with unique characteristics and assumptions. Here's a detailed description of each model used in this context:
+
+LASSO Regression: This model applies L1 regularization to reduce the risk of overfitting by penalizing large coefficients. It's particularly useful for models with a high number of predictors, as it can help in feature selection by shrinking some coefficients to zero.
+
+Ridge Regression: Similar to LASSO, Ridge applies L2 regularization. It's used to prevent overfitting by penalizing large coefficients, but unlike LASSO, it does not set them to zero.
+
+Elastic Net: This combines the properties of both LASSO and Ridge regression, using both L1 and L2 regularization. It's useful when there are correlations among predictors.
+
+Partial Least Squares (PLS): PLS is a method that projects both the predictors and the responses to a new space formed by orthogonal components that maximize the covariance between the response and the predictors.
+
+Multivariate Adaptive Regression Splines (MARS): MARS is a non-linear regression technique that can model complex interactions between variables. It's flexible and can capture non-linear relationships without prior specification.
+
+Model Training Procedure:
+1. Data Partitioning: The dataset 'dat' and a subset 'dat_subset' are divided into training (80%) and testing (20%) sets to ensure models are evaluated on unseen data.
+
+2. Feature Engineering: Model matrices are created from the training data, excluding the response variable for direct use in the models.
+
+3. Model Tuning and Training: For each model type (LASSO, Ridge, Elastic Net, PLS, MARS), the 'train' function from the 'caret' package is used with a grid of hyperparameters to find the best settings through cross-validation. The process involves:
+- Specifying a tuning grid for model parameters (e.g. 'lambda' for regularization strength, 'alpha' for the mix between LASSO and Ridge in Elastic Net).
+- Using repeated cross-validation to assess model performance and select the best hyperparameters ('ctrl_SE' for models where selection is based on the one-standard error rule, and 'ctrl_best' for models choosing the best performance).
+
+4. Model Evaluation: Models are evaluated using Resampling statistics (resamp) and comparison of RMSE (Root Mean Square Error) across all models using both the full dataset and the subset.
 
 ## Results
 
 In this section, report the final model you built to predict the time to recovery from COVID-19. Interpret the model and assess its performance.
+
+Final Model Selection:
+The final model selection involves comparing the RMSE of each model on the test dataset. The models are ranked based on their performance (lower RMSE values indicate better performance), and the best-performing model(s) can be chosen for further analysis or deployment.
 
 
 ## Conclusions
