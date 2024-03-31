@@ -213,7 +213,8 @@ enet.fit <- train(x = x,
                   method = "glmnet",
                   tuneGrid = expand.grid(alpha = seq(0, 1, length = 21),
                                          lambda = exp(seq(-5, 3, length = 100))),
-                  trControl = ctrl_best)
+                  trControl = ctrl_best,
+                  standardize = T)
 
 enet.fit$bestTune
 
@@ -236,7 +237,8 @@ enet.fit.sub <- train(x = x_sub,
                       method = "glmnet",
                       tuneGrid = expand.grid(alpha = seq(0, 1, length = 21),
                                              lambda = exp(seq(-5, 5, length = 100))),
-                      trControl = ctrl_best)
+                      trControl = ctrl_best,
+                      standardize = T)
 
 enet.fit.sub$bestTune
 
