@@ -131,22 +131,6 @@ To obtain our final model, we considered two subsets of predictors. The first se
 We then used the caret package in R to train and tune the models. Specifically, we used the train function, where we tune the hyperparameters using a grid search. For each model type, we defined a grid of hyperparameter values and performed repeated 10-fold cross-validation five times to find the hyperparameter (combination of hyperparameters) that yielded the lowest RMSE value (except for our LASSO model where we used the 1SE rule). For model comparison, we used test RMSE to select our model that best predicts COVID-19 recovery time. 
 
 
-\newpage
-
-
-Model Training Procedure:
-1. Data Partitioning: The dataset 'dat' and a subset 'dat_subset' are divided into training (80%) and testing (20%) sets to ensure models are evaluated on unseen data.
-
-2. Feature Engineering: Model matrices are created from the training data, excluding the response variable for direct use in the models.
-
-3. Model Tuning and Training: For each model type (LASSO, Ridge, Elastic Net, PLS, MARS), the 'train' function from the 'caret' package is used with a grid of hyperparameters to find the best settings through cross-validation. The process involves:
-- Specifying a tuning grid for model parameters (e.g. 'lambda' for regularization strength, 'alpha' for the mix between LASSO and Ridge in Elastic Net).
-- Using repeated cross-validation to assess model performance and select the best hyperparameters ('ctrl_SE' for models where selection is based on the one-standard error rule, and 'ctrl_best' for models choosing the best performance).
-
-4. Model Evaluation: Models are evaluated using Resampling statistics (resamp) and comparison of RMSE (Root Mean Square Error) across all models using both the full dataset and the subset.
-
-Final Model Selection:
-The final model selection involves comparing the RMSE of each model on the test dataset. The models are ranked based on their performance (lower RMSE values indicate better performance), and the best-performing model(s) can be chosen for further analysis or deployment. 
 
 ## Results
 
