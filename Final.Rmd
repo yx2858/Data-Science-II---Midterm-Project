@@ -1,5 +1,5 @@
 ---
-title: "temp title"
+title: "A Combined Cohort Study to Predict COVID-19 Recovery Time and Identify Risk Factors for Prolonged Recovery"
 author: "Jixin Li (jl6648), Alex McCreight (apm2217), Yueyi Xu (yx2858)"
 output: pdf_document
 date: "Spring 2024"
@@ -19,6 +19,9 @@ library(pls)
 library(corrplot)
 library(knitr)
 library(patchwork)
+library(tibble)
+library(knitr)
+library(kableExtra)
 
 
 load("recovery.RData")
@@ -55,9 +58,9 @@ dat <- dat %>%
 
 ## Introduction
 
-The severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) was first identified in China in December 2019. Since then, the COVID-19 pandemic poses a significant public health threat, particularly affecting older adults and individuals with chronic health conditions. Factors such as age, gender, vaccination status, the severity of COVID-19 symptoms, and pre-existing chronic illnesses play a crucial role in determining the recovery time for patients[@Factors].
+The severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) was first identified in China in December 2019. Since then, the COVID-19 pandemic has posed a significant public health threat, particularly affecting older adults and individuals with chronic health conditions. Factors such as age, gender, vaccination status, the severity of COVID-19 symptoms, and pre-existing chronic illnesses play a crucial role in determining the recovery time for patients[@Factors].
 
-In this project, we use statistical methods and fit models based on factors that potentially affect COVID-19 recovery time. We begin by examining the data and selecting appropriate variables for modeling. Next, we fit and train multiple models and evaluate their test errors to compare their accuracy. In the end, we choose the MARS model due to its lowest test error, ensuring accurate prediction of COVID-19 recovery time.
+In this project, we fit various models based on factors that potentially affect COVID-19 recovery time. First, we examine the data and visualize the relationship between risk factors and recovery time, as well as analyzing the correlation between factors. We then use different subsets of predictors to train and fit various types of models, including LASSO, elastic net, ridge regression, partial least squares, and MARS. Finally, we evaluate each model's test error to make our final model selection.
 
 ## Exploratory analysis and data visualization
 
@@ -65,7 +68,7 @@ With the goals of developing a prediction model for COVID-19 recovery time and i
 
 Among the discrete variables, we observed substantial differences in recovery time based on vaccination status as well as COVID-19 severity. Individuals who received the COVID-19 vaccine had shorter recovery times, on average, compared to those who have not received the vaccine (Figure 1a). Additionally, those with "severe" COVID-19 had longer recovery times, on average, compared to those with "non-severe" COVID-19 (Figure 1b).
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width=7, fig.height=3}
 p1 <- dat %>%
   mutate(vaccine = case_when(
     dat$vaccine == 1 ~ "Vaccinated",
@@ -89,14 +92,12 @@ p2 <- dat %>%
 p1 + p2
 ```
 
-
-
-
-Interestingly, we found a saw that those with diabetes had a shorter time to recovery compared to those without diabetes, which immediately seems counter intuitive (Figure 2). However, upon further literature review, we posit that those with diabetes in these studies either died more quickly compared to those without diabetes, or those with long-COVID and lived most likely had well-managed diabetes and took extra precautions against COVID-19 compared to those without diabetes[@diabetes].
+Interestingly, we found that those with diabetes had a shorter average time to recovery compared to those without diabetes, which immediately seems counter intuitive (Figure 2). However, upon further literature review, we posit that those with diabetes in these studies either died more quickly compared to those without diabetes, or those with long-COVID and lived most likely had well-managed diabetes and took extra precautions against COVID-19 compared to those without diabetes[@diabetes].
 
 Finally, we observed a significant difference in the variability of recovery times of participants in study A versus study B. The exact reasons for this discrepancy are unclear, however, we hypothesize that study A was conducted when the vaccines were more available leading to reduced variability in recovery time compared to study B. 
 
-```{r, echo = F}
+
+```{r, echo = F, fig.width = 5, fig.height = 3, fig.align='center'}
 dat %>%
   mutate(diabetes = case_when(
     dat$diabetes == 1 ~ "Has Diabetes",
@@ -111,6 +112,22 @@ dat %>%
   
 ## Model training
 
+We used several methods to predict the time to recovery from COVID-19 including:
+
+1. Least Absolute Shrinkage and Selection Operator (LASSO)
+
+2. Elastic Net
+
+3. Ridge Regression
+
+4. Partial Least Squares (PLS)
+
+5. Multivariate Adaptive Regression Splines (MARS)
+
+Each of these methods, besides MARS, assume linearity between the risk factors and recovery time. Additionally, LASSO, elastic net, and ridge regression all assume independence of observations, constant variance of residuals, and normality of residuals.
+
+**[note from Alex: still not sure about assumptions but going to move on for now]**
+
 In the pursuit of predicting the time to recovery from COVID-19, a series of statistical and machine learning models were deployed, each with unique characteristics and assumptions.
 
 Assumptions
@@ -124,6 +141,17 @@ Homoscedasticity: Constant variance of error terms for Ridge, LASSO, and Elastic
 No multicollinearity: Particularly relevant for linear models like Ridge and LASSO, although Elastic Net and PLS can handle multicollinearity to some extent.
 
 Normal Distribution of Errors: For linear models, it's often assumed that the error terms are normally distributed.
+
+**come back to assumption**
+
+To obtain our final model, we considered two subsets of predictors. The first set contained all predictors available in the dataset, while the second set included a selected group of predictors that demonstrated an association with recovery time during the exploratory analysis stage. These predictors were `age`, `height`, `weight`, `gender`, `race`, `smoking`, `hypertension`, `diabetes`, `vaccine`, `severity`, and `study`. For each subset of predictors, we divided the data into training and testing sets using an 80%/20% split. This split allowed us to evaluate the performance of the models on unseen data and assess the generalizability of our model. 
+
+We then used the caret package in R to train and tune the models. Specifically, we used the train function, where we tune the hyperparameters using a grid search. For each model type, we defined a grid of hyperparameter values and performed repeated 10-fold cross-validation five times to find the hyperparameter (combination of hyperparameters) that yielded the lowest RMSE value (except for our LASSO model where we used the 1SE rule).
+
+For model comparison, we **[alex is right here]**
+
+\newpage
+
 
 Model Training Procedure:
 1. Data Partitioning: The dataset 'dat' and a subset 'dat_subset' are divided into training (80%) and testing (20%) sets to ensure models are evaluated on unseen data.
@@ -144,62 +172,56 @@ The final model selection involves comparing the RMSE of each model on the test 
 The MARS model was selected as the best model for prediction because it achieved the lowest RMSE, which is 17.51607, indicates it would have the best predictive performance. According to the coefficient results, 
 the recovery time is 34.9 days when all predictor variables are zero; For every centimeter increase in height from 159.7, the recovery time increases by approximately 9.34 days; For every kilograms increase in weight from 77.8, the recovery time increases by approximately 0.62 days; people who are vaccinated experience a reduced recovery time by approximately 6.7 days compared to those who are not vaccinated; people who have severe symptoms experience a increased recovery time by approximately 7.5 days compared to those who don't have severe symptoms. Therefore, we can conclude that factors such as height, weight, vaccination, and severity are significant factors that affect COVID-19 patients' recovery time.
 
-Table 1: Comparison of RMSE values for different models.
-|     Model             |       RMSE       | 
-|-----------------------|------------------|
-| MARS (Subset)         |     17.51607     |    
-| MARS                  |     17.90665     |    
-| PLS                   |     18.38267	   |         
-| Elastic Net           |     18.40800	   |
-| LASSO                 |    	19.01320	   |
-| Ridge                 |     19.83322     |
-| Ridge (Subset)        |     20.13261	   |
-| Elastic Net (Subset)  |     20.13263	   |
-| PLS (Subset)          |     20.14682     |
-| LASSO (Subset)        |     20.82849     |
+```{r, echo = F}
+tibble(
+  Model = c("MARS (Subset)", "MARS", "PLS", "Elastic Net", "LASSO", "Ridge", "Ridge (Subset)", "Elastic Net (Subset)", "PLS (Subset)", "LASSO (Subset)"),
+  RMSE = c(17.51607, 17.90665, 18.38267, 18.40800, 19.01320, 19.83322, 20.13261, 20.13263, 20.14682, 20.82849)
+) %>% kable(caption = "Comparison of RMSE values for different models")
 
-Table 2: Coefficients results for MARS model.
-|               Variable                    |  coefficients    | 
-|-------------------------------------------|------------------|
-| (Intercept)                               |    34.88323690   |    
-| h(159.7-height)                           |     9.34309220   |    
-| h(159.7-height) * h(weight-81.1)          |     5.76534263   |         
-| h(159.7-height) * h(weight-81.1) * studyA |    -5.30476432   |
-| h(weight-77.8)                            |     0.61871036 	 |
-| h(171.7-height) * h(weight-77.8)          |     0.58372420   |
-| vaccine1                                  |    -6.70694245   |
-| h(171.7-height) * h(weight-77.8) * studyA |    -0.39375665   |
-| severity1                                 |     7.54439179   |
-| h(height-159.7) * h(87.3-weight)          |     0.05074098   |
-| h(159.7-height) * studyA                  |    -7.18027109   |
+tibble(
+  Variable = c("(Intercept)", 
+               "h(159.7-height)", 
+               "`h(159.7-height) * h(weight-81.1)`", 
+               "`h(159.7-height) *h(weight-81.1)* studyA`", 
+               "h(weight-77.8)", 
+               "`h(171.7-height) * h(weight-77.8)`", 
+               "vaccine1", 
+               "`h(171.7-height) *h(weight-77.8)* studyA`", 
+               "severity1", 
+               "`h(height-159.7) * h(87.3-weight)`", 
+               "`h(159.7-height) * studyA`"),
+  Coefficients = c(34.88323690, 9.34309220, 5.76534263, -5.30476432, 0.61871036, 0.58372420, -6.70694245, -0.39375665, 7.54439179, 0.05074098, -7.18027109)
+) %>% kable(caption = "Coefficients results for MARS model")
+```
+
 
 ```{r, inlcude=FALSE}
-set.seed(1)
-trainIndex_sub <- createDataPartition(dat_subset$recovery_time, p = 0.8, list = FALSE)
-training_data_sub <- dat_subset[trainIndex, ]
-testing_data_sub <- dat_subset[-trainIndex, ]
-
-ctrl_best <- trainControl(method = "repeatedcv",
-                      number = 10,
-                      repeats = 5,
-                      selectionFunction = "best")
-
-x_sub <- model.matrix(recovery_time ~ ., training_data_sub)[, -1]
-y_sub <- training_data_sub$recovery_time
-
-# MARS Sub
-
-mars_fit_sub <- train(x = x_sub,
-                  y = y_sub,
-                 method = "earth",
-                 tuneGrid = mars_grid,
-                 metric = "RMSE",
-                 trControl = ctrl_best)
-
-ggplot(mars_fit_sub) + theme_classic()
-
-mars_fit_sub$bestTune
-coef(mars_fit_sub$finalModel)
+# set.seed(1)
+# trainIndex_sub <- createDataPartition(dat_subset$recovery_time, p = 0.8, list = FALSE)
+# training_data_sub <- dat_subset[trainIndex, ]
+# testing_data_sub <- dat_subset[-trainIndex, ]
+# 
+# ctrl_best <- trainControl(method = "repeatedcv",
+#                       number = 10,
+#                       repeats = 5,
+#                       selectionFunction = "best")
+# 
+# x_sub <- model.matrix(recovery_time ~ ., training_data_sub)[, -1]
+# y_sub <- training_data_sub$recovery_time
+# 
+# # MARS Sub
+# 
+# mars_fit_sub <- train(x = x_sub,
+#                   y = y_sub,
+#                  method = "earth",
+#                  tuneGrid = mars_grid,
+#                  metric = "RMSE",
+#                  trControl = ctrl_best)
+# 
+# ggplot(mars_fit_sub) + theme_classic()
+# 
+# mars_fit_sub$bestTune
+# coef(mars_fit_sub$finalModel)
 ```
 
 
