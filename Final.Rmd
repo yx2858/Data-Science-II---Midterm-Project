@@ -130,19 +130,21 @@ To obtain our final model, we considered two subsets of predictors. The first se
 
 We then used the caret package in R to train and tune the models. Specifically, we used the train function, where we tune the hyperparameters using a grid search. For each model type, we defined a grid of hyperparameter values and performed repeated 10-fold cross-validation five times to find the hyperparameter (combination of hyperparameters) that yielded the lowest RMSE value (except for our LASSO model where we used the 1SE rule). For model comparison, we used test RMSE to select our model that best predicts COVID-19 recovery time. 
 
-
-
 ## Results
 
-The MARS model was selected as the best model for prediction because it achieved the lowest RMSE, which is 17.77325, indicates it would have the best predictive performance. According to the coefficient results, 
-the recovery time is 36.54 days when all predictor variables are zero; For every centimeter increase in height from 159.6cm, the recovery time increases by approximately 10.1 days; For every kilograms increase in weight from 77.8kg, the recovery time increases by approximately 1.08 days; people who are vaccinated experience a reduced recovery time by approximately 6.58 days compared to those who are not vaccinated; people who have severe symptoms experience a increased recovery time by approximately 7.5 days compared to those who don't have severe symptoms. Therefore, we can conclude that factors such as height, weight, vaccination, and severity are significant factors that affect COVID-19 patients' recovery time.
+The testing RMSE results are shown in Table 1. The MARS model fit on the subset of predictors achieved the lowest testing RMSE of 17.773, indicating that it had the best predictive performance of COVID-19 recovery times out of all our models. We found that our MARS model with all predictors included in the data set had the second best predictive performance with an RMSE of 17.907. Interestingly, all of our LASSO, Ridge Regression, Elastic Net, and Partial Least Squares models all performed better using all predictors as opposed to a subset of predictors. 
 
 ```{r, echo = F}
 tibble(
   Model = c("MARS (Subset)", "MARS", "PLS", "Elastic Net", "LASSO", "Ridge", "Ridge (Subset)", "Elastic Net (Subset)", "PLS (Subset)", "LASSO (Subset)"),
-  RMSE = c(17.77325, 17.90665, 18.38267, 18.40800, 19.06842, 19.83322, 20.41290, 20.41301, 20.43672, 20.82849)
+  RMSE = round(c(17.77325, 17.90665, 18.38267, 18.40800, 19.06842, 19.83322, 20.41290, 20.41301, 20.43672, 20.82849), 3)
 ) %>% kable(caption = "Comparison of RMSE values for different models")
+```
 
+We note here some of the interesting coefficient results from the final model, Table 2. For individuals less than 159.6 cm tall, we expect to see a 10.103-day increase in the recovery time for COVID-19 for each centimeter decrease in height below 159.6cm, while holding all other variables constant. Additionally, for individuals in study A, with height less than 159.6 cm, and weight greater than 81.3 kg, we expect to see a 5.892 decrease in the number of days it takes to recover from COVID-19 compared to individuals with the same height and weight but in study B, while holding all other variables constant. For individuals who weight less than 77.8 kg, we expect to see a 1.08 day increase in the recovery time for COVID-19 for each kilogram increase in the weight above 77.8kg, while holding all other variables constant. We expect to see individuals who received the vaccine to have a 6.581 day decrease in the recovery time compared to those who did not receive the vaccine, while holding all other variables constant. Finally, for individuals with severe COVID-19, we expect to see a 7.48 increase in the number of days it takes to recover compared to those who do not have severe COVID-19, while holding all other variables constant. 
+
+
+```{r, echo = F}
 tibble(
   Variable = c("(Intercept)", 
                "h(159.6-height)", 
@@ -155,40 +157,9 @@ tibble(
                "severity1", 
                "`h(height-159.6) * h(87.3-weight)`", 
                "`h(159.6-height) * studyA`"),
-  Coefficients = c(36.54169610, 10.10337216, 6.27108983, -5.89235302, 1.08027270, 0.53281219, -6.58139206, -0.40470585, 7.48014816, 0.07525588,  -6.23583295)
+  Coefficients = round(c(36.54169610, 10.10337216, 6.27108983, -5.89235302, 1.08027270, 0.53281219, -6.58139206, -0.40470585, 7.48014816, 0.07525588,  -6.23583295),3)
 ) %>% kable(caption = "Coefficients results for MARS model")
 ```
-
-
-```{r, inlcude=FALSE}
-# set.seed(1)
-# trainIndex_sub <- createDataPartition(dat_subset$recovery_time, p = 0.8, list = FALSE)
-# training_data_sub <- dat_subset[trainIndex, ]
-# testing_data_sub <- dat_subset[-trainIndex, ]
-# 
-# ctrl_best <- trainControl(method = "repeatedcv",
-#                       number = 10,
-#                       repeats = 5,
-#                       selectionFunction = "best")
-# 
-# x_sub <- model.matrix(recovery_time ~ ., training_data_sub)[, -1]
-# y_sub <- training_data_sub$recovery_time
-# 
-# # MARS Sub
-# 
-# mars_fit_sub <- train(x = x_sub,
-#                   y = y_sub,
-#                  method = "earth",
-#                  tuneGrid = mars_grid,
-#                  metric = "RMSE",
-#                  trControl = ctrl_best)
-# 
-# ggplot(mars_fit_sub) + theme_classic()
-# 
-# mars_fit_sub$bestTune
-# coef(mars_fit_sub$finalModel)
-```
-
 
 ## Conclusions
 
