@@ -169,28 +169,28 @@ The final model selection involves comparing the RMSE of each model on the test 
 
 ## Results
 
-The MARS model was selected as the best model for prediction because it achieved the lowest RMSE, which is 17.51607, indicates it would have the best predictive performance. According to the coefficient results, 
-the recovery time is 34.9 days when all predictor variables are zero; For every centimeter increase in height from 159.7, the recovery time increases by approximately 9.34 days; For every kilograms increase in weight from 77.8, the recovery time increases by approximately 0.62 days; people who are vaccinated experience a reduced recovery time by approximately 6.7 days compared to those who are not vaccinated; people who have severe symptoms experience a increased recovery time by approximately 7.5 days compared to those who don't have severe symptoms. Therefore, we can conclude that factors such as height, weight, vaccination, and severity are significant factors that affect COVID-19 patients' recovery time.
+The MARS model was selected as the best model for prediction because it achieved the lowest RMSE, which is 17.77325, indicates it would have the best predictive performance. According to the coefficient results, 
+the recovery time is 36.54 days when all predictor variables are zero; For every centimeter increase in height from 159.6cm, the recovery time increases by approximately 10.1 days; For every kilograms increase in weight from 77.8kg, the recovery time increases by approximately 1.08 days; people who are vaccinated experience a reduced recovery time by approximately 6.58 days compared to those who are not vaccinated; people who have severe symptoms experience a increased recovery time by approximately 7.5 days compared to those who don't have severe symptoms. Therefore, we can conclude that factors such as height, weight, vaccination, and severity are significant factors that affect COVID-19 patients' recovery time.
 
 ```{r, echo = F}
 tibble(
   Model = c("MARS (Subset)", "MARS", "PLS", "Elastic Net", "LASSO", "Ridge", "Ridge (Subset)", "Elastic Net (Subset)", "PLS (Subset)", "LASSO (Subset)"),
-  RMSE = c(17.51607, 17.90665, 18.38267, 18.40800, 19.01320, 19.83322, 20.13261, 20.13263, 20.14682, 20.82849)
+  RMSE = c(17.77325, 17.90665, 18.38267, 18.40800, 19.06842, 19.83322, 20.41290, 20.41301, 20.43672, 20.82849)
 ) %>% kable(caption = "Comparison of RMSE values for different models")
 
 tibble(
   Variable = c("(Intercept)", 
-               "h(159.7-height)", 
-               "`h(159.7-height) * h(weight-81.1)`", 
-               "`h(159.7-height) *h(weight-81.1)* studyA`", 
+               "h(159.6-height)", 
+               "`h(159.6-height) * h(weight-81.3)`", 
+               "`h(159.6-height) *h(weight-81.3)* studyA`", 
                "h(weight-77.8)", 
                "`h(171.7-height) * h(weight-77.8)`", 
                "vaccine1", 
-               "`h(171.7-height) *h(weight-77.8)* studyA`", 
+               "`h(171.6-height) *h(weight-77.8)* studyA`", 
                "severity1", 
-               "`h(height-159.7) * h(87.3-weight)`", 
-               "`h(159.7-height) * studyA`"),
-  Coefficients = c(34.88323690, 9.34309220, 5.76534263, -5.30476432, 0.61871036, 0.58372420, -6.70694245, -0.39375665, 7.54439179, 0.05074098, -7.18027109)
+               "`h(height-159.6) * h(87.3-weight)`", 
+               "`h(159.6-height) * studyA`"),
+  Coefficients = c(36.54169610, 10.10337216, 6.27108983, -5.89235302, 1.08027270, 0.53281219, -6.58139206, -0.40470585, 7.48014816, 0.07525588,  -6.23583295)
 ) %>% kable(caption = "Coefficients results for MARS model")
 ```
 
