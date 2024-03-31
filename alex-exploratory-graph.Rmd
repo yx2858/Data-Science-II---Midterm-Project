@@ -82,8 +82,14 @@ corrplot(cor(dat_continuous), method = 'number', type = 'lower')
 
 # Variables to include in subset: age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study
 
+# dat_subset <- dat %>% 
+#   select(c(age, bmi, gender, race, smoking, hypertension, diabetes, vaccine, severity, study, recovery_time))
+
+# dat_subset <- dat %>% 
+#   select(c(age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study, recovery_time))
+
 dat_subset <- dat %>% 
-  select(c(age, bmi, gender, race, smoking, hypertension, diabetes, vaccine, severity, study, recovery_time))
+  select(c(height, weight, vaccine, severity, study, recovery_time))
 
 dat %>% ggplot(aes(x = age, y = recovery_time)) +
   geom_jitter() + geom_smooth() + theme_classic()
@@ -122,6 +128,7 @@ y_sub <- train_data_sub$recovery_time
 
 
 ```{r}
+set.seed(1)
 # LASSO model Full
 lasso.fit <- train(
   x = x,
@@ -140,6 +147,7 @@ ggplot(lasso.fit, highlight = TRUE) +
 best_lambda <- lasso.fit$bestTune$lambda
 coef(lasso.fit$finalModel, lasso.fit$bestTune$lambda)
 
+set.seed(1)
 # LASSO model Subset
 lasso.fit.sub <- train(
   x = x_sub,
@@ -161,6 +169,7 @@ coef(lasso.fit.sub$finalModel, lasso.fit.sub$bestTune$lambda)
 ```
 
 ```{r}
+set.seed(1)
 # Elastic Net Full
 enet.fit <- train(x = x,
                   y = y,
@@ -180,6 +189,7 @@ plot(enet.fit, par.settings = myPar)
 
 coef(enet.fit$finalModel, enet.fit$bestTune$lambda)
 
+set.seed(1)
 # Elastic Net Subset
 enet.fit.sub <- train(x = x_sub,
                   y = y_sub,
@@ -201,6 +211,7 @@ coef(enet.fit.sub$finalModel, enet.fit.sub$bestTune$lambda)
 ```
 
 ```{r}
+set.seed(1)
 # Ridge Full
 ridge.fit <- train(x = x,
                    y = y,
@@ -216,6 +227,7 @@ ridge.fit$bestTune
 
 coef(ridge.fit$finalModel, s = ridge.fit$bestTune$lambda)
 
+set.seed(1)
 # Ridge Subset
 ridge.fit.sub <- train(x = x_sub,
                    y = y_sub,
@@ -232,6 +244,7 @@ ridge.fit.sub$bestTune
 coef(ridge.fit.sub$finalModel, s = ridge.fit.sub$bestTune$lambda)
 ```
 ```{r}
+set.seed(1)
 # Partial Least Squares
 pls.fit <- train(x = x,
                    y = y,
@@ -242,11 +255,13 @@ pls.fit <- train(x = x,
 
 ggplot(pls.fit, highlight = TRUE) + theme_classic()
 
+set.seed(1)
 # Partial Least Squares
 pls.fit.sub <- train(x = x_sub,
                    y = y_sub,
                    method = "pls",
-                   tuneGrid = data.frame(ncomp = 1:12),
+                   #tuneGrid = data.frame(ncomp = 1:12),
+                   tuneGrid = data.frame(ncomp = 1:6),
                    trControl = ctrl_best,
                    preProcess = c("center", "scale"))
 
@@ -256,6 +271,8 @@ ggplot(pls.fit.sub, highlight = TRUE) + theme_classic()
 ```{r}
 mars_grid <- expand.grid(degree = 1:3, 
                          nprune = 2:15)
+
+set.seed(1)
 # MARS Full
 mars.fit <- train(x = x,
                   y = y,
@@ -269,6 +286,7 @@ ggplot(mars.fit) + theme_classic()
 mars.fit$bestTune
 coef(mars.fit$finalModel)
 
+set.seed(1)
 # MARS Sub
 mars.fit.sub <- train(x = x_sub,
                   y = y_sub,
