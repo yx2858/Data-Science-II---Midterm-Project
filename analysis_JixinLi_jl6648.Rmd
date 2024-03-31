@@ -79,7 +79,7 @@ dat_continuous <- dat %>%
 
 corrplot(cor(dat_continuous), method = 'number', type = 'lower') 
 
-# Variables to include in subset: age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study
+# Variables to include in subset: height, weight, vaccine, severity, study
 
 dat_subset <- dat %>% 
   select(c(height, weight, vaccine, severity, study, recovery_time))
