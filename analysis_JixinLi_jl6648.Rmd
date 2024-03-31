@@ -15,6 +15,7 @@ library(tidyverse)
 library(ggplot2)
 library(ISLR)
 library(pls)
+library(corrplot)
 ```
 
 ```{r}
@@ -119,6 +120,8 @@ y_sub <- training_data_sub$recovery_time
 # Train the LASSO model
 
 ```{r}
+set.seed(1)
+
 lasso_model <- train(
   x = x,
   y = y,
@@ -136,6 +139,8 @@ best_lambda <- lasso_model$bestTune$lambda
 coef(lasso_model$finalModel, lasso_model$bestTune$lambda)
 
 # LASSO model Subset
+set.seed(1)
+
 lasso_fit_sub <- train(
   x = x_sub,
   y = y_sub,
@@ -156,6 +161,7 @@ coef(lasso_fit_sub$finalModel, lasso_fit_sub$bestTune$lambda)
 # train the ridge
 ```{r}
 set.seed(1)
+
 ridge_model <- train(x = x,
                     y = y,
                    data = training_data,
@@ -174,6 +180,8 @@ coef(ridge_model$finalModel, s = ridge_model$bestTune$lambda)
 
 
 # Ridge Subset
+set.seed(1)
+
 ridge_fit_sub <- train(x = x_sub,
                    y = y_sub,
                    data = training_data_sub,
@@ -192,6 +200,7 @@ coef(ridge_fit_sub$finalModel, s = ridge_fit_sub$bestTune$lambda)
 # train the elastic net 
 ```{r}
 set.seed(1)
+
 enet_model <- train(x = x,
                    y = y,
                   data = training_data,
@@ -213,6 +222,8 @@ plot(enet_model, par.settings = myPar)
 coef(enet_model$finalModel, enet_model$bestTune$lambda)
 
 # Elastic Net Subset
+set.seed(1)
+
 enet_fit_sub <- train(x = x_sub,
                   y = y_sub,
                   data = training_data_sub,
@@ -246,6 +257,8 @@ pls_model <- train(x = x,
 ggplot(pls_model, highlight = TRUE) + theme_classic()
 
 # Partial Least Squares
+set.seed(1)
+
 pls_fit_sub <- train(x = x_sub,
                    y = y_sub,
                    method = "pls",
@@ -259,6 +272,8 @@ ggplot(pls_fit_sub, highlight = TRUE) + theme_classic()
 
 # train the MARS 
 ```{r}
+set.seed(1)
+
 mars_grid <- expand.grid(degree = 1:3, 
                          nprune = 2:15)
 
@@ -275,6 +290,7 @@ mars_model$bestTune
 coef(mars_model$finalModel)
 
 # MARS Sub
+set.seed(1)
 
 mars_fit_sub <- train(x = x_sub,
                   y = y_sub,
