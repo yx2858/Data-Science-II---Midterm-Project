@@ -11,6 +11,13 @@ library(glmnet)
 library(caret)
 library(tidymodels)
 library(pls)
+library(splines)
+library(mgcv)
+library(pdp)
+library(earth)
+library(ggplot2)
+library(ISLR)
+library(corrplot)
 
 load("recovery.RData")
 ```
@@ -80,7 +87,7 @@ corrplot(cor(dat_continuous), method = 'number', type = 'lower')
 # Variables to include in subset: age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study
 
 dat_subset <- dat %>% 
-  select(c(age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study, recovery_time))
+  select(c(height, weight, vaccine, severity, study, recovery_time))
 
 dat %>% ggplot(aes(x = age, y = recovery_time)) +
   geom_jitter() + geom_smooth() + theme_classic()
@@ -264,7 +271,7 @@ set.seed(1)
 pls.fit.sub <- train(x = x_sub, 
                  y = y_sub,
                  method = "pls",
-                 tuneGrid = data.frame(ncomp = 1:12), 
+                 tuneGrid = data.frame(ncomp = 1:6), 
                  trControl = ctrl_best,
                  preProcess = c("center", "scale"))
 
