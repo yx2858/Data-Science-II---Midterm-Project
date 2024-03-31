@@ -82,7 +82,7 @@ corrplot(cor(dat_continuous), method = 'number', type = 'lower')
 # Variables to include in subset: age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study
 
 dat_subset <- dat %>% 
-  select(c(age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study, recovery_time))
+  select(c(height, weight, vaccine, severity, study, recovery_time))
 ```
 
 
@@ -262,7 +262,7 @@ set.seed(1)
 pls_fit_sub <- train(x = x_sub,
                    y = y_sub,
                    method = "pls",
-                   tuneGrid = data.frame(ncomp = 1:12),
+                   tuneGrid = data.frame(ncomp = 1:6),
                    trControl = ctrl_best,
                    preProcess = c("center", "scale"))
 
