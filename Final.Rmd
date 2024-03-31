@@ -208,7 +208,7 @@ tibble(
 
 ## Conclusions
 
-In this section, summarize your findings from the model analysis and discuss the insights gained into predicting time to recovery from COVID-19.
+The study aimed to predict COVID-19 recovery time using various statistical models and factors such as age, gender, height, weight, vaccination status, severity of symptoms, and pre-existing chronic illnesses. After trying out different models including Lasso, Ridge, Elastic Net, PLS, and MARS, our analysis revealed that the Multivariate Adaptive Regression Splines (MARS) model performed the best, achieving the lowest RMSE and demonstrating good predictive performance. Factors such as height, weight, vaccination, and severity were found to significantly influence COVID-19 patients' recovery time. Specifically, an increase in height and weight led to longer recovery times, while vaccination and less severe symptoms were associated with shorter recovery times. These findings highlight the importance of considering individual characteristics and health status when predicting COVID-19 outcomes and designing targeted interventions for patient care and management."
 
 ### Additional Considerations
 
