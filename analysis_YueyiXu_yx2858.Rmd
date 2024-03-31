@@ -173,7 +173,8 @@ ridge.fit <- train(x = x,
                    method = "glmnet",
                    tuneGrid = expand.grid(alpha = 0,
                                           lambda = exp(seq(10, -6, length=100))),
-                   trControl = ctrl_best)
+                   trControl = ctrl_best,
+                   standardize = T)
 
 plot(ridge.fit, xTrans = log)
 
@@ -193,7 +194,8 @@ ridge.fit.sub <- train(x = x_sub,
                        method = "glmnet",
                        tuneGrid = expand.grid(alpha = 0,
                                               lambda = exp(seq(10, -6, length=100))),
-                       trControl = ctrl_best)
+                       trControl = ctrl_best,
+                       standardize = T)
 
 plot(ridge.fit.sub, xTrans = log)
 
