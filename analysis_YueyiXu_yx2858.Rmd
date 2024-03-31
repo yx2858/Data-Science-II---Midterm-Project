@@ -18,6 +18,75 @@ load("recovery.RData")
 # Model Training
 
 ```{r}
+# Convert discrete variables to factors
+dat$gender <- as.factor(dat$gender)
+dat$race <- as.factor(dat$race)
+dat$smoking <- as.factor(dat$smoking)
+dat$hypertension <- as.factor(dat$hypertension)
+dat$diabetes <- as.factor(dat$diabetes)
+dat$vaccine <- as.factor(dat$vaccine)
+dat$severity <- as.factor(dat$severity)
+dat$study <- as.factor(dat$study)
+
+dat <- dat %>%
+  select(-id) %>% 
+  mutate(
+    gender = case_when(
+      dat$gender == 1 ~ "Male",
+      TRUE ~ "Female"),
+    race = case_when(
+      dat$race == 1 ~ "White",
+      dat$race == 2 ~ "Asian",
+      dat$race == 3 ~ "Black",
+      TRUE ~ "Hispanic"),
+    smoking = case_when(
+      dat$smoking == 0 ~ "Never Smoked",
+      dat$smoking == 1 ~ "Former Smoker",
+      TRUE ~ "Current Smoker")) %>% 
+  mutate_if(is.character, as.factor) %>% 
+  mutate(race = relevel(race, ref = "White"),
+         smoking = relevel(smoking, ref = "Never Smoked"),
+         study = relevel(study, ref = "B"))
+
+# Continuous variables
+continuous_vars <- c("age", "height", "weight", "bmi", "SBP", "LDL")
+
+for (var in continuous_vars) {
+  plot <- ggplot(dat, aes_string(x = var, y = "recovery_time")) +
+    geom_point() +
+    geom_smooth() +
+    labs(x = var, y = "Time to Recovery (days)", title = paste(var, "vs. Time to Recovery")) +
+    theme_classic()
+  print(plot)
+}
+
+# Discrete variables
+discrete_vars <- c("gender", "race", "smoking", "hypertension", "diabetes", "vaccine", "severity", "study")
+
+for (var in discrete_vars) {
+  plot <- ggplot(dat, aes_string(x = var, y = "recovery_time")) +
+    geom_boxplot() +
+    labs(x = var, y = "Time to Recovery (days)", title = paste(var, "vs. Time to Recovery")) +
+    theme_classic()
+  print(plot)
+}
+
+
+dat_continuous <- dat %>% 
+  select(c(age, height, weight, bmi, SBP, LDL))
+
+corrplot(cor(dat_continuous), method = 'number', type = 'lower') 
+
+# Variables to include in subset: age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study
+
+dat_subset <- dat %>% 
+  select(c(age, height, weight, gender, race, smoking, hypertension, diabetes, vaccine, severity, study, recovery_time))
+
+dat %>% ggplot(aes(x = age, y = recovery_time)) +
+  geom_jitter() + geom_smooth() + theme_classic()
+```
+
+```{r}
 ## Full data
 set.seed(1)
 trainIndex <- createDataPartition(dat$recovery_time, p = 0.8, list = FALSE)
@@ -25,6 +94,7 @@ train_data <- dat[trainIndex, ]
 test_data <- dat[-trainIndex, ]
 
 ## Subset data
+set.seed(1)
 trainIndex_sub <- createDataPartition(dat_subset$recovery_time, p = 0.8, list = FALSE)
 train_data_sub <- dat_subset[trainIndex, ]
 test_data_sub <- dat_subset[-trainIndex, ]
@@ -49,6 +119,7 @@ y_sub <- train_data_sub$recovery_time
 ### LASSO model (Full)
 
 ```{r}
+set.seed(1)
 lasso.fit <- train(x = x,
                    y = y,
                    data = train_data,
@@ -67,6 +138,7 @@ coef(lasso.fit$finalModel, lasso.fit$bestTune$lambda)
 ### LASSO model (Subset)
 
 ```{r}
+set.seed(1)
 lasso.fit.sub <- train(x = x_sub,
                        y = y_sub,
                        data = train_data_sub,
@@ -87,6 +159,7 @@ coef(lasso.fit.sub$finalModel, lasso.fit.sub$bestTune$lambda)
 ### Ridge model (Full)
 
 ```{r}
+set.seed(1)
 ridge.fit <- train(x = x,
                    y = y,
                    data = train_data,
@@ -106,6 +179,7 @@ coef(ridge.fit$finalModel, s = ridge.fit$bestTune$lambda)
 ### Ridge model (Subset)
 
 ```{r}
+set.seed(1)
 ridge.fit.sub <- train(x = x_sub,
                        y = y_sub,
                        data = train_data_sub,
@@ -125,6 +199,7 @@ coef(ridge.fit.sub$finalModel, s = ridge.fit.sub$bestTune$lambda)
 ### Elastic net model (Full)
 
 ```{r}
+set.seed(1)
 enet.fit <- train(x = x,
                   y = y,
                   data = train_data,
@@ -147,6 +222,7 @@ coef(enet.fit$finalModel, enet.fit$bestTune$lambda)
 ### Elastic net model (Subset)
 
 ```{r}
+set.seed(1)
 enet.fit.sub <- train(x = x_sub,
                       y = y_sub,
                       data = train_data_sub,
@@ -169,6 +245,7 @@ coef(enet.fit.sub$finalModel, enet.fit.sub$bestTune$lambda)
 ### Partial Least Square model (Full)
 
 ```{r}
+set.seed(1)
 pls.fit <- train(x = x, 
                  y = y,
                  method = "pls",
@@ -183,6 +260,7 @@ ggplot(pls.fit, highlight = TRUE)
 ### Partial Least Square model (Subset)
 
 ```{r}
+set.seed(1)
 pls.fit.sub <- train(x = x_sub, 
                  y = y_sub,
                  method = "pls",
@@ -197,6 +275,7 @@ ggplot(pls.fit.sub, highlight = TRUE)
 ### MARS model (Full)
 
 ```{r}
+set.seed(1)
 mars_grid <- expand.grid(degree = 1:3, 
                          nprune = 2:15)
 
@@ -217,6 +296,7 @@ coef(mars.fit$finalModel)
 ### MARS model (Subset)
 
 ```{r}
+set.seed(1)
 mars.fit.sub <- train(x = x_sub, 
                       y = y_sub,
                       method = "earth",
